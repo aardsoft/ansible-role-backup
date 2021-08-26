@@ -1,0 +1,27 @@
+#jinja2: lstrip_blocks: True
+#!/bin/bash
+# {{ ansible_managed }}
+
+if ((BASH_VERSINFO[0] < 4)); then
+    echo "Bash version >= 4 required"
+    exit 1
+fi
+
+_PROFILE=$1
+
+if [ -z "$_PROFILE" ]; then
+    echo "Usage: $0 profile"
+    exit 1
+fi
+
+. {{_backup_lib_dir}}/functions
+trap doCleanup INT TERM EXIT
+
+loadConfig
+loadProfile $_PROFILE
+validateProfile
+
+# skip trying to mount stuff here
+
+doRotate /$PROFILE_NAME DRYRUN
+#doBackup $BACKUP_SOURCE $PROFILE_NAME

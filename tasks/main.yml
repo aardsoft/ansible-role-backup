@@ -1,0 +1,83 @@
+- set_fact:
+    role_packages:
+      - rsync
+
+- include_role:
+    name: basic-host
+    tasks_from: install_packages
+
+- set_fact:
+    _backup_profile_dir: "{{backup.profile_dir|default('/etc/backup/profiles')}}"
+    _backup_exclude_dir: "{{backup.exclude_dir|default('/etc/backup/excludes')}}"
+    _backup_lib_dir: "{{backup.lib_dir|default('/etc/backup')}}"
+    _backup_maxnum: "{{backup.maxnum|default(5)}}"
+
+- name: copy service file
+  template:
+    src: backup@.service.j2
+    dest: /etc/systemd/system/backup@.service
+
+- name: create lib directory
+  file:
+    path: "{{_backup_lib_dir}}"
+    owner: root
+    mode: 0755
+    state: directory
+
+- name: create profile directory
+  file:
+    path: "{{_backup_profile_dir}}"
+    owner: root
+    mode: 0750
+    recurse: yes
+    state: directory
+
+- name: create exclude directory
+  file:
+    path: "{{_backup_exclude_dir}}"
+    owner: root
+    mode: 0750
+    state: directory
+
+- name: copy functions
+  template:
+    src: functions.j2
+    dest: "{{_backup_lib_dir}}/functions"
+    owner: root
+    mode: 0644
+
+- name: copy global configuration
+  template:
+    src: backup-config.j2
+    dest: "{{_backup_lib_dir}}/config"
+    owner: root
+    mode: 0644
+
+- name: copy backup scripts
+  template:
+    src: "{{_script}}.j2"
+    dest: "{{backup.bin_dir|default('/usr/bin/')}}/{{_script}}"
+    owner: root
+    mode: 0755
+  with_items:
+    - backup
+    - backup-profile
+    - backup-check-profile
+  loop_control:
+    loop_var: _script
+
+- name: create backup configurations
+  include_tasks: add_backup_configuration.yml
+  with_dict: "{{backup.profiles|default({})}}"
+  loop_control:
+    loop_var: _profile
+  when: >
+    _profile.value.state is undefined or _profile.value.state != "absent"
+
+- name: remove backup configurations
+  include_tasks: remove_backup_configuration.yml
+  with_dict: "{{backup.profiles|default({})}}"
+  loop_control:
+    loop_var: _profile
+  when: >
+    _profile.value.state is defined and _profile.value.state == "absent"

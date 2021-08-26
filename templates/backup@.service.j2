@@ -1,0 +1,12 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+[Unit]
+Description=Service to backup profile %i
+PartOf=backup.target
+
+[Service]
+ExecStart=/usr/bin/backup-profile %i
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target backup.target

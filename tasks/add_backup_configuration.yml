@@ -1,0 +1,20 @@
+- name: create backup configurations
+  template:
+    src: backup-profile.conf.j2
+    dest: "{{_backup_profile_dir}}/{{_profile.key}}"
+
+- name: create exclude configurations
+  template:
+    src: exclude.conf.j2
+    dest: "{{_backup_exclude_dir}}/{{_profile.key}}.excludes"
+  when: _profile.value.excludes is defined
+
+- name: create profile timer
+  include_role:
+    name: basic-host
+    tasks_from: add_timer
+  when: _profile.value.oncalendar is defined
+  vars:
+    systemd_timer_oncalendar: "{{_profile.value.oncalendar}}"
+    systemd_timer_name: "backup@{{_profile.key}}"
+    systemd_timer_add_service: False

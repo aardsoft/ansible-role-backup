@@ -1,0 +1,18 @@
+- name: remove backup configuration
+  file:
+    path: "{{_backup_profile_dir}}/{{_profile.key}}"
+    state: absent
+
+- name: create exclude configuration
+  file:
+    path: "{{_backup_exclude_dir}}/{{_profile.key}}.excludes"
+    state: absent
+  when: _profile.value.excludes is defined
+
+- name: remove profile timer
+  include_role:
+    name: basic-host
+    tasks_from: remove_timer
+  when: _profile.value.oncalendar is defined
+  vars:
+    systemd_timer_name: "backup@{{_profile.key}}"
