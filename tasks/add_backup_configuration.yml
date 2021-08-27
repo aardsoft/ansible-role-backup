@@ -1,15 +1,15 @@
-- name: create backup configurations
+- name: create backup configuration ({{_profile.key}}
   template:
     src: backup-profile.conf.j2
     dest: "{{_backup_profile_dir}}/{{_profile.key}}"
 
-- name: create exclude configurations
+- name: create exclude configuration ({{_profile.key}}
   template:
     src: exclude.conf.j2
     dest: "{{_backup_exclude_dir}}/{{_profile.key}}.excludes"
   when: _profile.value.excludes is defined
 
-- name: create profile timer
+- name: create profile timer ({{_profile.key}}
   include_role:
     name: basic-host
     tasks_from: add_timer
