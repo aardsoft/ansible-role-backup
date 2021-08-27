@@ -52,6 +52,18 @@ loadProfile(){
     if [ -z "$PROFILE_NAME" ]; then
         PROFILE_NAME=$_profile
     fi
+
+    if [ -n "$LOG_ARCHIVE_PATTERN" ]; then
+        _year=`date +%Y`
+        _month=`date +%m`
+        _day=`date +%d`
+        _backup_log_archive_file=${LOG_ARCHIVE_PATTERN/\%Y/$_year}
+        _backup_log_archive_file=${_backup_log_archive_file/\%m/$_month}
+        _backup_log_archive_file=${_backup_log_archive_file/\%d/$_day}
+        _backup_log_archive_file=${_backup_log_archive_file/\%profile/$_profile}
+        _backup_log_archive_dir=`dirname $_backup_log_archive_file`
+    fi
+
 }
 
 # this should be called after all configuration options, including custom
@@ -182,5 +194,15 @@ doCleanup(){
     echo "Cleaning up after $PROFILE_NAME"
     if [ -n "$SOURCE_SRC" ]; then
         MNT_PATH=$SOURCE_PATH doUnmount
+    fi
+}
+
+doSaveLog(){
+    if [ -n "$_backup_log_archive_file" ] &&
+           [ -n "$_backup_log_archive_dir" ]; then
+        echo "Creating $_backup_log_archive_dir"
+        mkdir -p "$_backup_log_archive_dir"
+        echo "Storing $_backup_log_archive_file"
+        journalctl -u backup@$_profile.service --since today > "$_backup_log_archive_file" 2>&1
     fi
 }
