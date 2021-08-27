@@ -140,20 +140,24 @@ doRotate(){
         # for dry runs we need to add one, as the new directory is not created
         NUMDIRS=$((NUMDIRS+1))
     fi
-    if [ $NUMDIRS -gt $NUMBAK ]; then
-        DELETE=$((NUMDIRS-NUMBAK))
-        echo "Have $NUMDIRS instead of $NUMBAK, deleting $DELETE"
-        if [ -z "$DELETE" ]; then
-            echo "Empty delete result, skipping deletions."
-        else
-            for i in `ls -1d --time=ctime $TARGET/$SOURCE.[0-9]*|tail -$DELETE`; do
-                echo "Deleting $i"
-                if [ -z "$DRYRUN" ]; then
-                    rm -Rf $i
-                else
-                    echo "ls -1d --time=ctime $TARGET/$SOURCE.[0-9]*|tail -$DELETE"
-                fi
-            done
+    if [ $NUMBAK -lt 1 ]; then
+        echo "Expiration is disabled for this profile"
+    else
+        if [ $NUMDIRS -gt $NUMBAK ]; then
+            DELETE=$((NUMDIRS-NUMBAK))
+            echo "Have $NUMDIRS instead of $NUMBAK, deleting $DELETE"
+            if [ -z "$DELETE" ]; then
+                echo "Empty delete result, skipping deletions."
+            else
+                for i in `ls -1d --time=ctime $TARGET/$SOURCE.[0-9]*|tail -$DELETE`; do
+                    echo "Deleting $i"
+                    if [ -z "$DRYRUN" ]; then
+                        rm -Rf $i
+                    else
+                        echo "ls -1d --time=ctime $TARGET/$SOURCE.[0-9]*|tail -$DELETE"
+                    fi
+                done
+            fi
         fi
     fi
 }

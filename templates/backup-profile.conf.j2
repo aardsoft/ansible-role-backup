@@ -5,6 +5,9 @@ SOURCE_OPTS={{_profile.value.opts|default('ro,X-mount.mkdir')}}
 SOURCE_PATH={{_profile.value.path|default(backup.dest_prefix + '/' + _profile.key)}}
 {% if _profile.value.excludes is defined %}
 EXCLUDE_FILE={{_backup_exclude_dir}}/{{_profile.key}}.excludes
+{% if _profile.value.maxnum is defined %}
+NUMBAK={{_profile.value.maxnum}}
+{% endif %}
 {% if _profile.value.log_archive_pattern is defined or backup.log_archive_pattern is defined%}
  {% if _profile.value.log_archive_pattern is defined %}
 LOG_ARCHIVE_PATTERN={{profile.value.log_archive_pattern}}
