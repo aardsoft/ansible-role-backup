@@ -1,10 +1,25 @@
 #jinja2: lstrip_blocks: True
 # {{ ansible_managed }}
-SOURCE_SRC={{_profile.value.src|default(backup.source_prefix + '/' + _profile.key)}}
+{% if _profile.value.src is defined or backup.source_prefix is defined %}
+{# jinja tries to expand the default values even if they're not needed #}
+{# to work around this we could add a default for the default value -  #}
+{# which would silence errors - or just do this if construct, which    #}
+{# will throw an error if the global fallback doesn't exist            #}
+ {% if _profile.value.src is defined %}
+SOURCE_SRC={{_profile.value.src}}
+ {% else %}
+SOURCE_SRC={{backup.source_prefix + '/' + _profile.key}}
+ {% endif %}
+{% endif %}
 SOURCE_OPTS={{_profile.value.opts|default('ro,X-mount.mkdir')}}
-SOURCE_PATH={{_profile.value.path|default(backup.dest_prefix + '/' + _profile.key)}}
+{% if _profile.value.path is defined %}
+SOURCE_PATH={{_profile.value.path}}
+{% else %}
+SOURCE_PATH={{backup.dest_prefix + '/' + _profile.key}}
+{% endif %}
 {% if _profile.value.excludes is defined %}
 EXCLUDE_FILE={{_backup_exclude_dir}}/{{_profile.key}}.excludes
+{% endif %}
 {% if _profile.value.maxnum is defined %}
 NUMBAK={{_profile.value.maxnum}}
 {% endif %}
