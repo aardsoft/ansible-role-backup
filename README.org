@@ -1,0 +1,54 @@
+* backup
+
+** Introduction
+This role wraps our old backup scripts. Scripts intentionally are included as templates to allow refactoring of the old code over time, without breaking anything.
+
+This is a standalone role, not tied to our [[https://github.com/aardsoft/ansible-role-basic-host][approach to infrustructure maintenance]].
+
+** Configuration
+
+Example configuration
+#+BEGIN_SRC yaml
+backup:
+  source_prefix: nfs.example.com:/volumepath
+  dest_prefix: /srv/mnt
+  target: /srv/backup
+  log_archive_pattern: '/srv/backup/logs/%profile/%Y/%m/%d.log'
+  maxnum: 14
+  profiles:
+    share1:
+      oncalendar: "*-*-* 01:05:01"
+      maxnum: 0
+    share2:
+      oncalendar: "*-*-* 01:35:01"
+      state: absent
+    share3:
+      oncalendar: "*-*-* 02:05:01"
+#+END_SRC
+
+*** Global keys
+**** source_prefix
+A prefix for mounting backup source volumes. Note: If this is set no local volumes are supported. If you need a mix of volumes already mounted, and to be mounted by this script leave this empty, and specify the path for each profile.
+**** dest_prefix
+The prefix for the source volumes on the backup host.
+**** target
+The target directory for the backups.
+**** maxnum
+The maximum number of copies to keep. If set to 0 or less expiration is disabled.
+**** log_archive_pattern
+A pattern to a filename storing the log file after the current run. The variables %Y, %m and %d as documented for =date= as well as %profile are replaced. The base directory is created before writing the log file.
+
+For this to work the backup needs to run as systemd service, and at most once per day. The script just redirects the output of =journalctl -u backup@$_profile.service --since today= to the log file.
+*** Profile keys
+**** path
+The local mountpoint containing the data to back up. If =src= is set this will be mounted here, otherwise it is assumed the volume is already mounted. If the global key =source_prefix= is set the default behaviour changes to setting this to =source_prefix/profile=, i.e., volumes without mounting are no longer supported.
+**** src
+The remote or volume path to containing the data to be backed up. Optional, only required if the backup script needs to mount the volume. If the global option =dest_prefix= is set this defaults to =dest_prefix/profile=
+**** opts
+Mount options, in case the volume needs to be mounted. The default is =ro,X-mount.mkdir=.
+**** excludes
+A list of files/patterns to be excluded. Each list entry is written as a line to a rsync exclude file. Optional.
+**** maxnum
+The maximum number of copies to keep. Falls back to the global maxnum, see the documentation there. Optional.
+**** log_archive_pattern
+See global parameter.
