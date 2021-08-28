@@ -172,7 +172,7 @@ doBackup(){
     DEST=$SHORTDEST.$NEWSTAMP
     if [ -z "$SOURCE" ]; then echo "doBackup() without SOURCE"; return; fi
     if [ -z "$EXCLUDE_FILE" ]; then
-        rsync -aHx --progress --numeric-ids --delete --delete-excluded $RSYNC_OPTS $SOURCE/./ $TARGET/$DEST
+        rsync -aHx -vv --progress --stats --numeric-ids --delete --delete-excluded $RSYNC_OPTS $SOURCE/./ $TARGET/$DEST
     else
         if [[ "$EXCLUDE_FILE" != /* ]]; then
             if [ -f "$_backup_exclude_dir/$EXCLUDE_FILE" ]; then
