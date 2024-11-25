@@ -4,6 +4,7 @@
 _backup_profile_dir={{_backup_profile_dir}}
 _backup_lib_dir={{_backup_lib_dir}}
 _backup_exclude_dir={{_backup_exclude_dir}}
+_backup_secret_dir={{_backup_secret_dir}}
 
 if [ -z "$NUMBAK" ]; then
     NUMBAK={{_backup_maxnum}}
@@ -35,10 +36,14 @@ loadProfile(){
         if [ -f "$_backup_profile_dir/$_profile" ]; then
             . "$_backup_profile_dir/$_profile"
         elif [ -f "$HOME/.config/backup/$_profile" ]; then
-        . "$HOME/.config/backup/$_profile"
+            . "$HOME/.config/backup/$_profile"
         else
             echo "Profile $_profile not found";
             exit 1
+        fi
+
+        if [ -f "$HOME/.config/backup/secrets/$_profile.secrets" ]; then
+            . "$HOME/.config/backup/secrets/$_profile.secrets"
         fi
     else
         if [ -f "$_backup_profile_dir/$_profile" ]; then
@@ -46,6 +51,10 @@ loadProfile(){
         else
             echo "Profile $_profile not found";
             exit 1
+        fi
+
+        if [ -f "$_backup_secret_dir/$_profile.secrets" ]; then
+            . "$_backup_secret_dir/$_profile.secrets"
         fi
     fi
 
@@ -73,6 +82,10 @@ validateProfile(){
     if [ -z "$TARGET" ]; then
         echo "Backup target (TARGET) not set"
         exit 1
+    fi
+
+    if [ -z "$BACKUP_TYPE" ]; then
+        BACKUP_TYPE=rsync
     fi
 
     if [ -z "$BACKUP_SOURCE" ]; then
@@ -169,8 +182,51 @@ doBackup(){
     else
         SHORTDEST=`echo $SOURCE|sed 's,^/,,'`
     fi
-    DEST=$SHORTDEST.$NEWSTAMP
+
     if [ -z "$SOURCE" ]; then echo "doBackup() without SOURCE"; return; fi
+
+    if [ "$BACKUP_TYPE" = "rsync" ]; then
+        doRsyncBackup "$SOURCE" "$SHORTDEST"
+    elif [ "$BACKUP_TYPE" = "restic" ]; then
+        doResticBackup "$SOURCE" "$SHORTDEST"
+    else
+        echo "Unsupported backup type: $BACKUP_TYPE"
+    fi
+}
+
+doResticBackup(){
+    SOURCE=$1
+    SHORTDEST=$2
+
+    # TODO
+    # easiest is just to chdir to wherever we want to make the backup,
+    # but in some cases we might want to have more control over the snapshot names
+    cd $SOURCE
+    if [ -z "$EXCLUDE_FILE" ]; then
+        restic backup --json --exclude-caches . | jq '. | select(.message_type == "summary" )'
+    else
+        if [[ "$EXCLUDE_FILE" != /* ]]; then
+            if [ -f "$_backup_exclude_dir/$EXCLUDE_FILE" ]; then
+                EXCLUDE_FILE="$_backup_exclude_dir/$EXCLUDE_FILE"
+                echo "Using $EXCLUDE_FILE"
+            elif [ -f "$HOME/.config/backup/config/$EXCLUDE_FILE" ]; then
+                EXCLUDE_FILE="$HOME/.config/backup/config/$EXCLUDE_FILE"
+                echo "Using $EXCLUDE_FILE"
+            fi
+        fi
+
+        if [ ! -f "$EXCLUDE_FILE" ]; then
+            echo "Exclude file specified, but not present: $EXCLUDE_FILE"
+            exit 1
+        fi
+        restic backup --json --exclude-caches --exclude-file "$EXCLUDE_FILE" . | jq '. | select(.message_type == "summary" )'
+    fi
+}
+
+doRsyncBackup(){
+    SOURCE=$1
+    SHORTDEST=$2
+    DEST=$SHORTDEST.$NEWSTAMP
     if [ -z "$EXCLUDE_FILE" ]; then
         rsync -aHx -vv --progress --stats --numeric-ids --delete --delete-excluded $RSYNC_OPTS $SOURCE/./ $TARGET/$DEST
     else

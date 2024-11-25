@@ -30,3 +30,13 @@ LOG_ARCHIVE_PATTERN={{profile.value.log_archive_pattern}}
 LOG_ARCHIVE_PATTERN={{backup.log_archive_pattern}}
  {% endif %}
 {% endif %}
+{% if _profile.value.target is defined %}
+# This overrides a global target definition
+TARGET={{_profile.value.target}}
+{% endif %}
+{% if _profile.value.type is defined or backup.type is defined %}
+BACKYP_TYPE={{_profile.value.type|default(backup.type)}}
+  {% if _profile.value.type|default(backup.type) == "restic" %}
+export RESTIC_REPOSITORY={{_profile.value.target|default(backup.target)}}
+  {% endif %}
+{% endif %}

@@ -9,6 +9,14 @@
     dest: "{{_backup_exclude_dir}}/{{_profile.key}}.excludes"
   when: _profile.value.excludes is defined
 
+# create profile secrets. we load global secrets first, and then profile secrets, and then export stuff
+- name: create secrets configuration ({{_profile.key}}
+  template:
+    src: secrets.conf.j2
+    dest: "{{_backup_secret_dir}}/{{_profile.key}}.secrets"
+    mode: 0600
+  when: _profile.value.secrets is defined
+
 - name: create profile timer ({{_profile.key}}
   include_role:
     name: basic-host

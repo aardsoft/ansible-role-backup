@@ -6,3 +6,6 @@ TARGET={{backup.target}}
 {% if backup.maxnum is defined %}
 NUMBAK={{backup.maxnum}}
 {% endif %}
+{% if backup.type is defined %}
+BACKUP_TYPE={{ backup.type }}
+{% endif %}

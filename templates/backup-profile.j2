@@ -21,6 +21,7 @@ loadConfig
 loadProfile $_PROFILE
 validateProfile
 
+# TODO: snapshots
 if [ -n "$SOURCE_SRC" ]; then
     echo "Mount $SOURCE_SRC"
     grep -q $SOURCE_SRC /proc/mounts
@@ -36,6 +37,8 @@ if [ -n "$SOURCE_SRC" ]; then
     fi
 fi
 
-doRotate /$PROFILE_NAME
+if [ "$BACKUP_TYPE" = "rsync" ]; then
+    doRotate /$PROFILE_NAME
+fi
 doBackup $BACKUP_SOURCE $PROFILE_NAME
 doSaveLog

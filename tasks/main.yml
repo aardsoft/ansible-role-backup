@@ -9,6 +9,7 @@
 - set_fact:
     _backup_profile_dir: "{{backup.profile_dir|default('/etc/backup/profiles')}}"
     _backup_exclude_dir: "{{backup.exclude_dir|default('/etc/backup/excludes')}}"
+    _backup_secret_dir: "{{backup.secret_dir|default('/etc/backup/secrets')}}"
     _backup_lib_dir: "{{backup.lib_dir|default('/etc/backup')}}"
     _backup_maxnum: "{{backup.maxnum|default(5)}}"
 
@@ -37,6 +38,13 @@
     path: "{{_backup_exclude_dir}}"
     owner: root
     mode: 0750
+    state: directory
+
+- name: create secret directory
+  file:
+    path: "{{_backup_secret_dir}}"
+    owner: root
+    mode: 0700
     state: directory
 
 - name: copy functions
