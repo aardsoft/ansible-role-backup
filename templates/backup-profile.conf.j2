@@ -1,5 +1,16 @@
 #jinja2: lstrip_blocks: True
 # {{ ansible_managed }}
+
+if [ `id -u` -eq 0 ]; then
+    if [ -f {{_backup_secret_dir}}/{{_profile.key}}.secrets ]; then
+        . {{_backup_secret_dir}}/{{_profile.key}}.secrets
+    fi
+else
+    if [ -f "$HOME/.config/backup/secrets/{{_profile.key}}.secrets" ]; then
+        . "$HOME/.config/backup/secrets/{{_profile.key}}.secrets"
+    fi
+fi
+
 {% if _profile.value.src is defined or backup.source_prefix is defined %}
 {# jinja tries to expand the default values even if they're not needed #}
 {# to work around this we could add a default for the default value -  #}

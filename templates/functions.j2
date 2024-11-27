@@ -41,20 +41,12 @@ loadProfile(){
             echo "Profile $_profile not found";
             exit 1
         fi
-
-        if [ -f "$HOME/.config/backup/secrets/$_profile.secrets" ]; then
-            . "$HOME/.config/backup/secrets/$_profile.secrets"
-        fi
     else
         if [ -f "$_backup_profile_dir/$_profile" ]; then
             . "$_backup_profile_dir/$_profile"
         else
             echo "Profile $_profile not found";
             exit 1
-        fi
-
-        if [ -f "$_backup_secret_dir/$_profile.secrets" ]; then
-            . "$_backup_secret_dir/$_profile.secrets"
         fi
     fi
 
