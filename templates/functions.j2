@@ -242,10 +242,35 @@ doRsyncBackup(){
     ln -sfT $TARGET/$DEST $TARGET/$SHORTDEST.current
 }
 
+doSnapshot(){
+    lvcreate -s -n $SNAP_LV -L$SNAP_SIZE /dev/$VG_NAME/$SOURCE_LV
+}
+
 doCleanup(){
-    echo "Cleaning up after $PROFILE_NAME"
+    echo "Cleaning up after $PROFILE_NAME:"
+    if [ -n "$SAVED_WD" ]; then
+        cd $SAVED_WD
+    else
+        cd /
+    fi
     if [ -n "$SOURCE_SRC" ]; then
+        echo "- unmounting"
         MNT_PATH=$SOURCE_PATH doUnmount
+        sync
+    fi
+    if [ -n "$LV_NAME" ]; then
+        echo "- removing snapshot"
+        for tri in `seq 1 5`; do
+            lvremove -f /dev/$VG_NAME/$SNAP_LV
+            status=$?
+            if [ $status -eq 0 ]; then
+                break;
+            else
+                mount|grep /dev/$VG_NAME/$SNAP_LV
+                echo "...retry"
+                sleep 1
+            fi
+        done
     fi
 }
 

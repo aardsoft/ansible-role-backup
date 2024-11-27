@@ -41,6 +41,12 @@ LOG_ARCHIVE_PATTERN={{profile.value.log_archive_pattern}}
 LOG_ARCHIVE_PATTERN={{backup.log_archive_pattern}}
  {% endif %}
 {% endif %}
+{% if _profile.value.lv is defined %}
+LV_NAME={{_profile.value.lv}}
+VG_NAME={{_profile.value.vg|default('vg0')}}
+SNAP_LV={{_profile.value.snap_lv|default('snap')}}
+SNAP_SIZE={{_profile.value.snap_size|default('10G')}}
+{% endif %}
 {% if _profile.value.target is defined %}
 # This overrides a global target definition
 TARGET={{_profile.value.target}}

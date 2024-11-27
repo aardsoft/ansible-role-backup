@@ -22,6 +22,14 @@ loadProfile $_PROFILE
 validateProfile
 
 # TODO: snapshots
+# we need snap volume name, source volume name, and volume group
+if [ -n "$LV_NAME" ]; then
+    SOURCE_LV=$LV_NAME doSnapshot
+    SOURCE_SRC="/dev/$VG_NAME/$SNAP_LV"
+#    mkdir -p $SOURCE_PATH
+fi
+
+
 if [ -n "$SOURCE_SRC" ]; then
     echo "Mount $SOURCE_SRC"
     grep -q $SOURCE_SRC /proc/mounts
