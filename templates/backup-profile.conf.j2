@@ -52,10 +52,16 @@ SNAP_SIZE={{_profile.value.snap_size|default('10G')}}
 TARGET={{_profile.value.target}}
 {% endif %}
 {% if _profile.value.type is defined or backup.type is defined %}
-BACKYP_TYPE={{_profile.value.type|default(backup.type)}}
+BACKUP_TYPE={{_profile.value.type|default(backup.type)}}
   {% if _profile.value.type|default(backup.type) == "restic" %}
 export RESTIC_REPOSITORY={{_profile.value.target|default(backup.target)}}
-  {% endif %}
+    {% if _profile.value.restic_opts is defined %}
+RESTIC_OPTS={{_profile.value.restic_opts}}
+    {% endif %}
+    {% if _profile.value.backup_user is defined %}
+export RESTIC_REST_USERNAME={{_profile.value.backup_user}}
+    {% endif %}
+    {% endif %}
 # This workaround can be dropped once all supported systems have restic >= 16.1
 RESTIC_OLD=`restic version |awk '{ split($2,v,"."); if (v[2] <= 15) print "OLD"; if (v[2] >= 16 && v[3] == 0) print "OLD"}'`
 RESTIC_REST=`echo $RESTIC_REPOSITORY | grep -o ^rest:`
