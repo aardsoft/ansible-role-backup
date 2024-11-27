@@ -56,4 +56,10 @@ BACKYP_TYPE={{_profile.value.type|default(backup.type)}}
   {% if _profile.value.type|default(backup.type) == "restic" %}
 export RESTIC_REPOSITORY={{_profile.value.target|default(backup.target)}}
   {% endif %}
+# This workaround can be dropped once all supported systems have restic >= 16.1
+RESTIC_OLD=`restic version |awk '{ split($2,v,"."); if (v[2] <= 15) print "OLD"; if (v[2] >= 16 && v[3] == 0) print "OLD"}'`
+RESTIC_REST=`echo $RESTIC_REPOSITORY | grep -o ^rest:`
+if [ -n "$RESTIC_OLD" ] && [ -n "$RESTIC_REST" ]; then
+   export RESTIC_REPOSITORY=`echo $RESTIC_REPOSITORY|sed "s,://,://${RESTIC_REST_USERNAME}:${RESTIC_REST_PASSWORD}@,"`
+fi
 {% endif %}
