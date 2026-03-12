@@ -32,7 +32,7 @@ fi
 
 if [ -n "$SOURCE_SRC" ]; then
     echo "Mount $SOURCE_SRC"
-    grep -q $SOURCE_SRC /proc/mounts
+    grep -q "$SOURCE_SRC" /proc/mounts
     if [ $? -eq 0 ]; then
         echo "Volume for $_PROFILE already mounted, exiting"
         exit 1

@@ -23,6 +23,9 @@ SOURCE_SRC={{backup.source_prefix + '/' + _profile.key}}
  {% endif %}
 {% endif %}
 SOURCE_OPTS={{_profile.value.opts|default('ro,X-mount.mkdir')}}
+{% if _profile.value.fstype is defined %}
+SOURCE_FSTYPE={{_profile.value.fstype}}
+{% endif %}
 {% if _profile.value.path is defined %}
 SOURCE_PATH={{_profile.value.path}}
 {% else %}
@@ -54,18 +57,27 @@ TARGET={{_profile.value.target}}
 {% if _profile.value.type is defined or backup.type is defined %}
 BACKUP_TYPE={{_profile.value.type|default(backup.type)}}
   {% if _profile.value.type|default(backup.type) == "restic" %}
-export RESTIC_REPOSITORY={{_profile.value.target|default(backup.target)}}
-    {% if _profile.value.restic_opts is defined %}
+    {% if _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh' %}
+export RESTIC_REPOSITORY=rclone:
+TARGET=rclone:
+RCLONE_PROGRAM="ssh -F {{_backup_lib_dir}}/ssh/{{_profile.key}}.conf -q {{_profile.value.rclone_ssh.host}}"
+      {% if _profile.value.restic_opts is defined %}
 RESTIC_OPTS={{_profile.value.restic_opts}}
-    {% endif %}
-    {% if _profile.value.backup_user is defined %}
+      {% endif %}
+    {% else %}
+export RESTIC_REPOSITORY={{_profile.value.target|default(backup.target)}}
+      {% if _profile.value.restic_opts is defined %}
+RESTIC_OPTS={{_profile.value.restic_opts}}
+      {% endif %}
+      {% if _profile.value.backup_user is defined %}
 export RESTIC_REST_USERNAME={{_profile.value.backup_user}}
-    {% endif %}
-    {% endif %}
+      {% endif %}
 # This workaround can be dropped once all supported systems have restic >= 16.1
 RESTIC_OLD=`restic version |awk '{ split($2,v,"."); if (v[2] <= 15) print "OLD"; if (v[2] >= 16 && v[3] == 0) print "OLD"}'`
 RESTIC_REST=`echo $RESTIC_REPOSITORY | grep -o ^rest:`
 if [ -n "$RESTIC_OLD" ] && [ -n "$RESTIC_REST" ]; then
    export RESTIC_REPOSITORY=`echo $RESTIC_REPOSITORY|sed "s,://,://${RESTIC_REST_USERNAME}:${RESTIC_REST_PASSWORD}@,"`
 fi
+    {% endif %}
+  {% endif %}
 {% endif %}

@@ -9,6 +9,12 @@
     state: absent
   when: _profile.value.excludes is defined
 
+- name: remove SSH config for rclone_ssh transport ({{_profile.key}})
+  file:
+    path: "{{_backup_lib_dir}}/ssh/{{_profile.key}}.conf"
+    state: absent
+  when: _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh'
+
 - name: remove profile timer
   include_role:
     name: basic-host

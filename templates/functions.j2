@@ -111,7 +111,7 @@ doMount(){
     fi
 
     _cmd="mount $_options $MNT_SRC $MNT_PATH"
-    `$_cmd`
+    $_cmd
     return $?
 }
 
@@ -190,12 +190,17 @@ doResticBackup(){
     SOURCE=$1
     SHORTDEST=$2
 
+    _restic_extra_args=()
+    if [ -n "$RCLONE_PROGRAM" ]; then
+        _restic_extra_args+=(-o "rclone.program=$RCLONE_PROGRAM")
+    fi
+
     # TODO
     # easiest is just to chdir to wherever we want to make the backup,
     # but in some cases we might want to have more control over the snapshot names
     cd $SOURCE
     if [ -z "$EXCLUDE_FILE" ]; then
-        restic backup --json --exclude-caches $RESTIC_OPTS . | jq '. | select(.message_type == "summary" )'
+        restic backup --json --exclude-caches "${_restic_extra_args[@]}" $RESTIC_OPTS . | jq '. | select(.message_type == "summary" )'
     else
         if [[ "$EXCLUDE_FILE" != /* ]]; then
             if [ -f "$_backup_exclude_dir/$EXCLUDE_FILE" ]; then
@@ -211,7 +216,7 @@ doResticBackup(){
             echo "Exclude file specified, but not present: $EXCLUDE_FILE"
             exit 1
         fi
-        restic backup --json --exclude-caches --exclude-file "$EXCLUDE_FILE" $RESTIC_OPTS . | jq '. | select(.message_type == "summary" )'
+        restic backup --json --exclude-caches --exclude-file "$EXCLUDE_FILE" "${_restic_extra_args[@]}" $RESTIC_OPTS . | jq '. | select(.message_type == "summary" )'
     fi
 }
 
@@ -265,6 +270,8 @@ doCleanup(){
             status=$?
             if [ $status -eq 0 ]; then
                 break;
+            elif ! mount|grep -q /dev/$VG_NAME/$SNAP_LV; then
+                break
             else
                 mount|grep /dev/$VG_NAME/$SNAP_LV
                 echo "...retry"

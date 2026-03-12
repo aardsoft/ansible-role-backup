@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# SSH configuration for restic rclone_ssh backup profile {{ _profile.key }}
+Host {{ _profile.value.rclone_ssh.host }}
+    User {{ _profile.value.rclone_ssh.user }}
+    Hostname {{ _profile.value.rclone_ssh.hostname }}
+    Port {{ _profile.value.rclone_ssh.port | default(22) }}
+    IdentitiesOnly yes
+    IdentityFile {{ _profile.value.rclone_ssh.identity_file }}
+    RequestTTY no
+    ProxyCommand none
+    StrictHostKeyChecking {{ _profile.value.rclone_ssh.strict_host_checking | default('accept-new') }}

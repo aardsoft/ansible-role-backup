@@ -1,3 +1,39 @@
+- name: create SSH config directory for rclone_ssh transport
+  file:
+    path: "{{_backup_lib_dir}}/ssh"
+    owner: root
+    mode: 0700
+    state: directory
+  when: _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh'
+
+- name: create SSH config for rclone_ssh transport ({{_profile.key}})
+  template:
+    src: ssh-config.j2
+    dest: "{{_backup_lib_dir}}/ssh/{{_profile.key}}.conf"
+    owner: root
+    mode: 0600
+  when: _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh'
+
+- name: ensure SSH identity file directory exists for rclone_ssh transport ({{_profile.key}})
+  file:
+    path: "{{_profile.value.rclone_ssh.identity_file | dirname}}"
+    owner: root
+    mode: 0700
+    state: directory
+  when:
+    - _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh'
+    - _profile.value.rclone_ssh.identity_file_secret is defined
+
+- name: deploy SSH identity file from password store for rclone_ssh transport ({{_profile.key}})
+  template:
+    src: identity-file.j2
+    dest: "{{_profile.value.rclone_ssh.identity_file}}"
+    owner: root
+    mode: 0600
+  when:
+    - _profile.value.restic_transport is defined and _profile.value.restic_transport == 'rclone_ssh'
+    - _profile.value.rclone_ssh.identity_file_secret is defined
+
 - name: create backup configuration ({{_profile.key}}
   template:
     src: backup-profile.conf.j2
