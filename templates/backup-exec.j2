@@ -1,0 +1,41 @@
+#jinja2: lstrip_blocks: True
+#!/bin/bash
+# {{ ansible_managed }}
+# Execute an arbitrary command in the context of a backup profile.
+# The profile is loaded to set up repository credentials and connection
+# settings, then the given command is executed with them in the environment.
+#
+# Usage: backup-exec <profile> <command> [args...]
+#
+# Examples:
+#   backup-exec home restic snapshots
+#   backup-exec home restic forget --keep-last 10 --prune
+#   backup-exec offsite restic stats
+#   backup-exec offsite restic list locks
+
+if ((BASH_VERSINFO[0] < 4)); then
+    echo "Bash version >= 4 required"
+    exit 1
+fi
+
+_PROFILE=$1
+shift
+
+if [ -z "$_PROFILE" ] || [ $# -eq 0 ]; then
+    echo "Usage: $0 profile command [args...]"
+    exit 1
+fi
+
+. {{_backup_lib_dir}}/functions
+loadConfig
+loadProfile $_PROFILE
+
+_cmd=$1
+shift
+
+_extra_args=()
+if [[ "$(basename -- "$_cmd")" == "restic" ]] && [ -n "$RCLONE_PROGRAM" ]; then
+    _extra_args+=(-o "rclone.program=$RCLONE_PROGRAM")
+fi
+
+exec "$_cmd" "${_extra_args[@]}" "$@"

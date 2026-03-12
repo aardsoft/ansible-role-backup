@@ -69,6 +69,7 @@
     mode: 0755
   with_items:
     - backup
+    - backup-exec
     - backup-profile
     - backup-check-profile
   loop_control:
